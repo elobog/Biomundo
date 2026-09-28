@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Biomundo.AI/Biomundo.AI.csproj" />
+    <Project Path="src/Biomundo.Data/Biomundo.Data.csproj" />
+    <Project Path="src/Biomundo.Odoo/Biomundo.Odoo.csproj" />
+    <Project Path="src/Biomundo.Sync/Biomundo.Sync.csproj" />
+    <Project Path="src/Biomundo.Web/Biomundo.Web.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Biomundo.Tests/Biomundo.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/Biomundo.Explorer/Biomundo.Explorer.csproj" />
+  </Folder>
+</Solution>

@@ -1,0 +1,17 @@
+<Project>
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Company>Melirrepu</Company>
+    <Product>Biomundo</Product>
+  </PropertyGroup>
+
+  <!--
+    bin/obj fuera del repositorio (y fuera de OneDrive) para evitar conflictos de sincronización.
+    Para compilar dentro del repo (p. ej. en CI) definir BIOMUNDO_ARTIFACTS_IN_REPO=true.
+  -->
+  <PropertyGroup Condition="'$(LOCALAPPDATA)' != '' and '$(BIOMUNDO_ARTIFACTS_IN_REPO)' != 'true'">
+    <ArtifactsPath>$(LOCALAPPDATA)\Biomundo\artifacts</ArtifactsPath>
+  </PropertyGroup>
+</Project>
