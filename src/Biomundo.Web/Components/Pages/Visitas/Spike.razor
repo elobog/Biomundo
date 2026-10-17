@@ -12,6 +12,14 @@
 <button class="btn btn-primary" @onclick="ProbarUbicacionAsync" disabled="@_cargando">
     @(_cargando ? "Obteniendo ubicación..." : "Probar ubicación")
 </button>
+<button class="btn btn-outline-secondary ms-2" @onclick="VerDiagnosticoAsync">
+    Ver diagnóstico (sin pedir GPS)
+</button>
+
+@if (_diagnostico is not null)
+{
+    <p class="mt-3"><code>@_diagnostico</code></p>
+}
 
 @if (_resultado is not null)
 {
@@ -29,13 +37,26 @@
     <div class="alert alert-danger mt-3">@_error</div>
 }
 
-<script src="https://res.cdn.office.net/teams-js/2.19.0/js/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
+<script src="https://res.cdn.office.net/teams-js/2.40.0/js/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
 <script src="js/geo.js"></script>
 
 @code {
     private bool _cargando;
     private string? _error;
+    private string? _diagnostico = "(todavía no presionado)";
     private GeoResult? _resultado;
+
+    private async Task VerDiagnosticoAsync()
+    {
+        try
+        {
+            _diagnostico = await JS.InvokeAsync<string>("biomundoGeo.diagnostico");
+        }
+        catch (Exception ex)
+        {
+            _diagnostico = $"ERROR al invocar diagnostico() vía JS interop: {ex.GetType().Name}: {ex.Message}";
+        }
+    }
 
     private async Task ProbarUbicacionAsync()
     {

@@ -6,20 +6,56 @@
 // hay que pedirla a través del SDK de Teams (@microsoft/teams-js), que se la solicita al host nativo
 // (la app de Teams, no al webview), y el host nativo es quien maneja el permiso del sistema operativo.
 //
-// Por eso: si el SDK de Teams está disponible y soporta geolocalización, se usa esa vía. Si no
-// (por ejemplo, abriendo esta página directo en un navegador normal, fuera de Teams, para desarrollo),
-// cae de vuelta a navigator.geolocation estándar.
+// IMPORTANTE (confirmado en pruebas reales): el SDK de Teams lanza "The library has not yet been
+// initialized" si se llama a CUALQUIER otra función (incluido geoLocation.isSupported()) antes de que
+// microsoftTeams.app.initialize() haya terminado. Por eso toda llamada pasa primero por
+// _ensureTeamsInitialized(), que inicializa una sola vez (cachea la promesa) y nunca más de una vez.
 window.biomundoGeo = {
-    _teamsInitialized: false,
+    _teamsInitPromise: null,
+
+    _ensureTeamsInitialized: function () {
+        if (typeof window.microsoftTeams === "undefined") {
+            return Promise.resolve(false); // SDK no cargado (fuera de Teams, o falló la carga del script)
+        }
+        if (!this._teamsInitPromise) {
+            this._teamsInitPromise = microsoftTeams.app.initialize()
+                .then(() => true)
+                .catch(e => {
+                    console.error("Error inicializando el SDK de Teams:", e);
+                    return false;
+                });
+        }
+        return this._teamsInitPromise;
+    },
+
+    // Diagnóstico expuesto para depurar sin consola del navegador (difícil de abrir dentro de Teams).
+    // Devuelve un string ya serializado (JSON.stringify), no un objeto, para no depender de cómo
+    // Blazor interprete la serialización automática de JS interop.
+    diagnostico: async function () {
+        try {
+            const sdkCargado = typeof window.microsoftTeams !== "undefined";
+            const inicializado = sdkCargado ? await this._ensureTeamsInitialized() : false;
+            const soportado = inicializado && !!(window.microsoftTeams.geoLocation
+                && window.microsoftTeams.geoLocation.isSupported
+                && window.microsoftTeams.geoLocation.isSupported());
+            return JSON.stringify({
+                sdkTeamsCargado: sdkCargado,
+                teamsInicializado: inicializado,
+                geoLocationSoportado: soportado,
+                userAgent: navigator.userAgent
+            });
+        } catch (e) {
+            return "ERROR en diagnostico(): " + (e.message || e);
+        }
+    },
 
     getPosition: async function () {
-        if (window.microsoftTeams) {
-            try {
-                if (!this._teamsInitialized) {
-                    await microsoftTeams.app.initialize();
-                    this._teamsInitialized = true;
-                }
-                if (microsoftTeams.geoLocation && microsoftTeams.geoLocation.isSupported()) {
+        const sdkCargado = typeof window.microsoftTeams !== "undefined";
+
+        if (sdkCargado) {
+            const inicializado = await this._ensureTeamsInitialized();
+            if (inicializado && microsoftTeams.geoLocation && microsoftTeams.geoLocation.isSupported && microsoftTeams.geoLocation.isSupported()) {
+                try {
                     const location = await microsoftTeams.geoLocation.getCurrentLocation();
                     return {
                         latitude: location.latitude,
@@ -28,13 +64,13 @@ window.biomundoGeo = {
                         timestamp: Date.now(),
                         via: "teams-sdk"
                     };
+                } catch (teamsError) {
+                    throw new Error(`Error pidiendo ubicación vía SDK de Teams: ${teamsError.message || teamsError}`);
                 }
-            } catch (teamsError) {
-                throw new Error(`Error pidiendo ubicación vía SDK de Teams: ${teamsError.message || teamsError}`);
             }
         }
 
-        // Fuera de Teams (navegador normal, para desarrollo): geolocalización HTML5 estándar.
+        // Fuera de Teams, o el SDK no cargó/no soporta geoLocation: geolocalización HTML5 estándar.
         return new Promise((resolve, reject) => {
             if (!navigator.geolocation) {
                 reject(new Error("Este navegador/webview no soporta geolocalización (navigator.geolocation no existe)."));
