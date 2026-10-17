@@ -34,6 +34,7 @@
         <dt class="col-sm-3">Vía</dt><dd class="col-sm-9">@_resultado.Via</dd>
     </dl>
     <p class="text-success">✓ Geolocalización funcionó correctamente en este dispositivo/contexto.</p>
+    <div id="mapa-ubicacion" style="height: 300px; border-radius: 8px;"></div>
 }
 
 @if (_error is not null)
@@ -41,6 +42,8 @@
     <div class="alert alert-danger mt-3">@_error</div>
 }
 
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
 <script src="https://res.cdn.office.net/teams-js/2.40.0/js/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
 <script src="js/geo.js"></script>
 
@@ -48,7 +51,7 @@
     // Subir este número manualmente cada vez que se cambie algo relevante del spike (código o manifiesto).
     // Se ve en pantalla para confirmar, al probar en Teams, que el dispositivo cargó la versión esperada
     // y no una vieja que quedó cacheada.
-    private const string SpikeVersion = "v6 (getPosition devuelve JSON como string, parseo tolerante)";
+    private const string SpikeVersion = "v7 (mapa con Leaflet + OpenStreetMap)";
 
     // Hora en que arrancó este proceso del servidor (UTC). Cambia en cada redeploy/reinicio del contenedor:
     // si el valor no cambió tras un deploy, la app vieja sigue corriendo (no se actualizó).
@@ -58,6 +61,19 @@
     private string? _error;
     private string? _diagnostico = "(todavía no presionado)";
     private GeoResult? _resultado;
+    private bool _debeRenderizarMapa;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // El <div id="mapa-ubicacion"> solo existe en el DOM cuando _resultado no es null, así que el
+        // mapa se dibuja acá (después del render), no en ProbarUbicacionAsync, donde el div todavía no
+        // existe en el momento de invocar JS.
+        if (_debeRenderizarMapa && _resultado is not null)
+        {
+            _debeRenderizarMapa = false;
+            await JS.InvokeVoidAsync("biomundoGeo.mostrarMapa", _resultado.Latitude, _resultado.Longitude);
+        }
+    }
 
     private async Task VerDiagnosticoAsync()
     {
@@ -82,6 +98,7 @@
         {
             var json = await JS.InvokeAsync<string>("biomundoGeo.getPosition");
             _resultado = GeoResult.ParseTolerante(json);
+            _debeRenderizarMapa = true;
         }
         catch (Exception ex)
         {

@@ -93,5 +93,29 @@ window.biomundoGeo = {
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         });
+    },
+
+    _mapaLeaflet: null,
+
+    // Dibuja (o redibuja) un mapa Leaflet + OpenStreetMap en el <div id="mapa-ubicacion"> de la página,
+    // centrado en la ubicación detectada. Se llama desde C# (OnAfterRenderAsync) una vez que el div
+    // ya existe en el DOM.
+    mostrarMapa: function (lat, lon) {
+        try {
+            if (this._mapaLeaflet) {
+                this._mapaLeaflet.remove();
+                this._mapaLeaflet = null;
+            }
+            this._mapaLeaflet = L.map("mapa-ubicacion").setView([lat, lon], 17);
+            L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+                maxZoom: 19,
+                attribution: "© OpenStreetMap"
+            }).addTo(this._mapaLeaflet);
+            L.marker([lat, lon]).addTo(this._mapaLeaflet)
+                .bindPopup("Ubicación detectada")
+                .openPopup();
+        } catch (e) {
+            console.error("Error mostrando el mapa:", e);
+        }
     }
 };
