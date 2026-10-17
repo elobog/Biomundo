@@ -1,0 +1,17 @@
+{
+  "name": "Biomundo - Control de Vendedores",
+  "short_name": "Biomundo",
+  "description": "Registro de visitas comerciales con geolocalización.",
+  "start_url": "/visitas/spike",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "lang": "es-CL",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
