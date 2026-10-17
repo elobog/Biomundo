@@ -49,6 +49,11 @@ window.biomundoGeo = {
         }
     },
 
+    // Devuelve un string ya serializado (JSON.stringify), igual que diagnostico(). No un objeto: dejar que
+    // el interop de Blazor deserialice un objeto JS "a ciegas" a un record C# dio error de tipos repetidas
+    // veces en pruebas reales en iOS (pos.timestamp llega con forma distinta según el dispositivo/navegador).
+    // Pasando siempre por JSON.stringify con timestamp como STRING (no número), el problema desaparece
+    // de raíz: del lado C# solo hay que parsear texto, nunca inferir un tipo numérico.
     getPosition: async function () {
         const sdkCargado = typeof window.microsoftTeams !== "undefined";
 
@@ -57,13 +62,13 @@ window.biomundoGeo = {
             if (inicializado && microsoftTeams.geoLocation && microsoftTeams.geoLocation.isSupported && microsoftTeams.geoLocation.isSupported()) {
                 try {
                     const location = await microsoftTeams.geoLocation.getCurrentLocation();
-                    return {
+                    return JSON.stringify({
                         latitude: location.latitude,
                         longitude: location.longitude,
                         accuracy: location.accuracy,
-                        timestamp: Date.now(),
+                        timestamp: String(Date.now()),
                         via: "teams-sdk"
-                    };
+                    });
                 } catch (teamsError) {
                     throw new Error(`Error pidiendo ubicación vía SDK de Teams: ${teamsError.message || teamsError}`);
                 }
@@ -77,13 +82,13 @@ window.biomundoGeo = {
                 return;
             }
             navigator.geolocation.getCurrentPosition(
-                pos => resolve({
+                pos => resolve(JSON.stringify({
                     latitude: pos.coords.latitude,
                     longitude: pos.coords.longitude,
                     accuracy: pos.coords.accuracy,
-                    timestamp: pos.timestamp,
+                    timestamp: String(pos.timestamp),
                     via: "navigator.geolocation"
-                }),
+                })),
                 err => reject(new Error(`${err.message} (código ${err.code}: 1=permiso denegado, 2=posición no disponible, 3=timeout)`)),
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );

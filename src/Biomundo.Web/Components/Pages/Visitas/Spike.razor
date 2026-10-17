@@ -48,7 +48,7 @@
     // Subir este número manualmente cada vez que se cambie algo relevante del spike (código o manifiesto).
     // Se ve en pantalla para confirmar, al probar en Teams, que el dispositivo cargó la versión esperada
     // y no una vieja que quedó cacheada.
-    private const string SpikeVersion = "v5 (fix: Timestamp como double, no long)";
+    private const string SpikeVersion = "v6 (getPosition devuelve JSON como string, parseo tolerante)";
 
     // Hora en que arrancó este proceso del servidor (UTC). Cambia en cada redeploy/reinicio del contenedor:
     // si el valor no cambió tras un deploy, la app vieja sigue corriendo (no se actualizó).
@@ -80,7 +80,8 @@
 
         try
         {
-            _resultado = await JS.InvokeAsync<GeoResult>("biomundoGeo.getPosition");
+            var json = await JS.InvokeAsync<string>("biomundoGeo.getPosition");
+            _resultado = GeoResult.ParseTolerante(json);
         }
         catch (Exception ex)
         {
@@ -92,7 +93,30 @@
         }
     }
 
-    // Timestamp como double, no long: en iOS/WebKit pos.timestamp puede venir con decimales
-    // (protección de precisión/huella digital del navegador), lo que rompía la deserialización a long.
-    private sealed record GeoResult(double Latitude, double Longitude, double Accuracy, double Timestamp, string Via);
+    // Parseo manual y tolerante en vez de deserialización automática de tipos: en pruebas reales en iOS
+    // la forma exacta de "timestamp" varió entre dispositivos (entero, con decimales) y rompía la
+    // deserialización automática a un record tipado. Acá se extrae cada campo con el tipo que venga,
+    // sin asumir nada, y Timestamp queda como texto (no se usa para cálculos, solo se muestra).
+    private sealed record GeoResult(double Latitude, double Longitude, double Accuracy, string Timestamp, string Via)
+    {
+        public static GeoResult ParseTolerante(string json)
+        {
+            using var doc = System.Text.Json.JsonDocument.Parse(json);
+            var root = doc.RootElement;
+            return new GeoResult(
+                GetDouble(root, "latitude"),
+                GetDouble(root, "longitude"),
+                GetDouble(root, "accuracy"),
+                GetRaw(root, "timestamp"),
+                GetRaw(root, "via"));
+        }
+
+        private static double GetDouble(System.Text.Json.JsonElement root, string prop) =>
+            root.TryGetProperty(prop, out var v) && v.TryGetDouble(out var d) ? d : 0;
+
+        private static string GetRaw(System.Text.Json.JsonElement root, string prop) =>
+            root.TryGetProperty(prop, out var v)
+                ? (v.ValueKind == System.Text.Json.JsonValueKind.String ? v.GetString()! : v.GetRawText())
+                : "(ausente)";
+    }
 }
