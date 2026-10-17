@@ -1,8 +1,8 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
   "manifestVersion": "1.16",
-  "version": "1.0.0",
-  "id": "de52292b-d456-44b8-8bd0-990591b78b82",
+  "version": "3.0.0",
+  "id": "a4db8c5d-211c-4ef0-ba1c-3c7e33574b9d",
   "developer": {
     "name": "Melirrepu",
     "websiteUrl": "https://melirrepu.com",
@@ -14,8 +14,8 @@
     "outline": "outline.png"
   },
   "name": {
-    "short": "Biomundo Visitas (spike)",
-    "full": "Biomundo - Control de Vendedores (prueba tecnica)"
+    "short": "Biomundo Visitas (spike v3)",
+    "full": "Biomundo - Control de Vendedores (prueba tecnica v3 - SDK de Teams para GPS)"
   },
   "description": {
     "short": "Prueba tecnica de GPS en Teams",
@@ -31,5 +31,6 @@
       "scopes": ["personal"]
     }
   ],
-  "validDomains": ["app-biomundo.azurewebsites.net"]
+  "validDomains": ["app-biomundo.azurewebsites.net", "res.cdn.office.net"],
+  "devicePermissions": ["geoLocation"]
 }

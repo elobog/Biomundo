@@ -19,6 +19,7 @@
         <dt class="col-sm-3">Latitud</dt><dd class="col-sm-9">@_resultado.Latitude</dd>
         <dt class="col-sm-3">Longitud</dt><dd class="col-sm-9">@_resultado.Longitude</dd>
         <dt class="col-sm-3">Precisión (m)</dt><dd class="col-sm-9">@_resultado.Accuracy</dd>
+        <dt class="col-sm-3">Vía</dt><dd class="col-sm-9">@_resultado.Via</dd>
     </dl>
     <p class="text-success">✓ Geolocalización funcionó correctamente en este dispositivo/contexto.</p>
 }
@@ -28,6 +29,7 @@
     <div class="alert alert-danger mt-3">@_error</div>
 }
 
+<script src="https://res.cdn.office.net/teams-js/2.19.0/js/MicrosoftTeams.min.js" crossorigin="anonymous"></script>
 <script src="js/geo.js"></script>
 
 @code {
@@ -56,5 +58,5 @@
         }
     }
 
-    private sealed record GeoResult(double Latitude, double Longitude, double Accuracy, long Timestamp);
+    private sealed record GeoResult(double Latitude, double Longitude, double Accuracy, long Timestamp, string Via);
 }

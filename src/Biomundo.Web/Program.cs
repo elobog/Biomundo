@@ -27,13 +27,23 @@ if (!exposedViaTunnel)
 }
 
 // Permite que Microsoft Teams incruste la app en un iframe (requerido por las Tabs de Teams).
-// Sin este header, el navegador/webview bloquea el iframe por X-Frame-Options/CSP por defecto.
+// Blazor agrega sus propias cabeceras anti-clickjacking (X-Frame-Options: SAMEORIGIN y
+// Content-Security-Policy: frame-ancestors 'self') más abajo en el pipeline, en la respuesta final.
+// Si fijamos nuestra CSP aquí arriba con un middleware normal, Blazor agrega la suya DESPUÉS y el
+// navegador aplica la intersección de ambas (la más restrictiva gana), bloqueando a Teams igual.
+// Por eso se hace en Response.OnStarting: ese callback corre justo antes de enviar la respuesta,
+// después de que todo el pipeline (incluido Blazor) ya puso sus cabeceras, así las sobrescribimos.
 app.Use(async (context, next) =>
 {
-    context.Response.Headers["Content-Security-Policy"] =
-        "frame-ancestors https://teams.microsoft.com https://*.teams.microsoft.com " +
-        "https://*.cloud.microsoft https://teams.live.com https://*.skype.com " +
-        "https://outlook.office.com https://outlook.office365.com;";
+    context.Response.OnStarting(() =>
+    {
+        context.Response.Headers.Remove("X-Frame-Options");
+        context.Response.Headers["Content-Security-Policy"] =
+            "frame-ancestors https://teams.microsoft.com https://*.teams.microsoft.com " +
+            "https://*.cloud.microsoft https://teams.live.com https://*.skype.com " +
+            "https://outlook.office.com https://outlook.office365.com;";
+        return Task.CompletedTask;
+    });
     await next();
 });
 
