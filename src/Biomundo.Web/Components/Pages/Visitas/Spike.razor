@@ -1,0 +1,60 @@
+@page "/visitas/spike"
+@inject IJSRuntime JS
+
+<PageTitle>Biomundo — Spike GPS</PageTitle>
+
+<h1>Control de vendedores — prueba de ubicación</h1>
+<p class="text-muted">
+    Página de prueba técnica (no es el módulo final). Objetivo: confirmar que la geolocalización HTML5
+    funciona dentro del webview de Microsoft Teams Mobile, antes de construir el resto del módulo.
+</p>
+
+<button class="btn btn-primary" @onclick="ProbarUbicacionAsync" disabled="@_cargando">
+    @(_cargando ? "Obteniendo ubicación..." : "Probar ubicación")
+</button>
+
+@if (_resultado is not null)
+{
+    <dl class="row mt-3">
+        <dt class="col-sm-3">Latitud</dt><dd class="col-sm-9">@_resultado.Latitude</dd>
+        <dt class="col-sm-3">Longitud</dt><dd class="col-sm-9">@_resultado.Longitude</dd>
+        <dt class="col-sm-3">Precisión (m)</dt><dd class="col-sm-9">@_resultado.Accuracy</dd>
+    </dl>
+    <p class="text-success">✓ Geolocalización funcionó correctamente en este dispositivo/contexto.</p>
+}
+
+@if (_error is not null)
+{
+    <div class="alert alert-danger mt-3">@_error</div>
+}
+
+<script src="js/geo.js"></script>
+
+@code {
+    private bool _cargando;
+    private string? _error;
+    private GeoResult? _resultado;
+
+    private async Task ProbarUbicacionAsync()
+    {
+        _cargando = true;
+        _error = null;
+        _resultado = null;
+        StateHasChanged();
+
+        try
+        {
+            _resultado = await JS.InvokeAsync<GeoResult>("biomundoGeo.getPosition");
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _cargando = false;
+        }
+    }
+
+    private sealed record GeoResult(double Latitude, double Longitude, double Accuracy, long Timestamp);
+}

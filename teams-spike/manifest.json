@@ -1,0 +1,35 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.16/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.16",
+  "version": "1.0.0",
+  "id": "de52292b-d456-44b8-8bd0-990591b78b82",
+  "developer": {
+    "name": "Melirrepu",
+    "websiteUrl": "https://melirrepu.com",
+    "privacyUrl": "https://melirrepu.com",
+    "termsOfUseUrl": "https://melirrepu.com"
+  },
+  "icons": {
+    "color": "color.png",
+    "outline": "outline.png"
+  },
+  "name": {
+    "short": "Biomundo Visitas (spike)",
+    "full": "Biomundo - Control de Vendedores (prueba tecnica)"
+  },
+  "description": {
+    "short": "Prueba tecnica de GPS en Teams",
+    "full": "Pagina de prueba para validar que la geolocalizacion HTML5 funciona dentro del webview de Microsoft Teams antes de construir el modulo completo de control de vendedores."
+  },
+  "accentColor": "#16a34a",
+  "staticTabs": [
+    {
+      "entityId": "visitas-spike",
+      "name": "Spike GPS",
+      "contentUrl": "https://app-biomundo.azurewebsites.net/visitas/spike",
+      "websiteUrl": "https://app-biomundo.azurewebsites.net/visitas/spike",
+      "scopes": ["personal"]
+    }
+  ],
+  "validDomains": ["app-biomundo.azurewebsites.net"]
+}

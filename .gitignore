@@ -486,3 +486,6 @@ docs/diagnostico-odoo/*.md
 docs/diagnostico-odoo/*.json
 docs/diagnostico-odoo/*.html
 !docs/diagnostico-odoo/.gitkeep
+
+# Paquete generado de Teams (binario, se reconstruye desde manifest.json + iconos)
+teams-spike/*.zip
