@@ -8,6 +8,10 @@
     Página de prueba técnica (no es el módulo final). Objetivo: confirmar que la geolocalización HTML5
     funciona dentro del webview de Microsoft Teams Mobile, antes de construir el resto del módulo.
 </p>
+<p>
+    <span class="badge bg-secondary">Versión del spike: @SpikeVersion</span>
+    <span class="badge bg-light text-dark border">Servidor arrancó: @ServerStartedAt.ToString("yyyy-MM-dd HH:mm:ss") UTC</span>
+</p>
 
 <button class="btn btn-primary" @onclick="ProbarUbicacionAsync" disabled="@_cargando">
     @(_cargando ? "Obteniendo ubicación..." : "Probar ubicación")
@@ -41,6 +45,15 @@
 <script src="js/geo.js"></script>
 
 @code {
+    // Subir este número manualmente cada vez que se cambie algo relevante del spike (código o manifiesto).
+    // Se ve en pantalla para confirmar, al probar en Teams, que el dispositivo cargó la versión esperada
+    // y no una vieja que quedó cacheada.
+    private const string SpikeVersion = "v5 (fix: Timestamp como double, no long)";
+
+    // Hora en que arrancó este proceso del servidor (UTC). Cambia en cada redeploy/reinicio del contenedor:
+    // si el valor no cambió tras un deploy, la app vieja sigue corriendo (no se actualizó).
+    private static readonly DateTime ServerStartedAt = DateTime.UtcNow;
+
     private bool _cargando;
     private string? _error;
     private string? _diagnostico = "(todavía no presionado)";
@@ -79,5 +92,7 @@
         }
     }
 
-    private sealed record GeoResult(double Latitude, double Longitude, double Accuracy, long Timestamp, string Via);
+    // Timestamp como double, no long: en iOS/WebKit pos.timestamp puede venir con decimales
+    // (protección de precisión/huella digital del navegador), lo que rompía la deserialización a long.
+    private sealed record GeoResult(double Latitude, double Longitude, double Accuracy, double Timestamp, string Via);
 }
